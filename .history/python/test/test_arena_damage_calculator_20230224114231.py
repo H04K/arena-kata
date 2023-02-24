@@ -2,7 +2,7 @@ from src.arena_damage_calculator import ArenaDamageCalculator, Hero, HeroElement
 import pytest
 
 
-def test_compute_damage_attacker_water_should_return_defenders_list():
+def test_compute_damage_attacker_water_should_return_defenderS_():
     attacker = Hero(HeroElement.WATER,100,100,100,100,100)
     defenders = [   
                     Hero(HeroElement.FIRE,100,100,100,100,100), 
