@@ -29,4 +29,3 @@ def test_compute_damage_attacker_earth_should_return_defenders_list():
                     Hero(HeroElement.EARTH,100,100,100,100,100)
                 ]
     assert ArenaDamageCalculator().computeDamage(attacker, defenders) == defenders
-    

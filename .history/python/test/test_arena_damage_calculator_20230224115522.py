@@ -30,3 +30,5 @@ def test_compute_damage_attacker_earth_should_return_defenders_list():
                 ]
     assert ArenaDamageCalculator().computeDamage(attacker, defenders) == defenders
     
+#check branch coverage pytest cli 
+#pytest --cov=src --cov-report=term-missing
