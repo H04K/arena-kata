@@ -12,57 +12,26 @@ class Buff(Enum):
     DEFENSE = 2
 
 class Hero:
-    def __init__(self, element: HeroElement, power, defense, leth, crtr, lp):
+    def __init__(self, element: HeroElement, power, defense, leth, crtic_rate, life_points):
         self.element = element
         self.pow = power
         self.defense = defense
         self.leth = leth
-        self.crtr = crtr
-        self.lp = lp
-        self.buffs = list()
+        self.crtr = crtic_rate
+        self.crtic_rate = crtic_rate
+        self.lp = life_points
+        self.life_points = life_points
+        self.buffs = []
 
 class ArenaDamageCalculator:
 
-    def computeDamage(self, attacker:Hero, defenders: list[Hero]):
+    def computeDamage(self, attacker: Hero, defenders: list[Hero]):
         power = attacker.pow
-
-        adv = list()
-        eq = list()
-        dis = list()
-
-        if attacker.element == HeroElement.WATER:
-            for h in defenders:
-                if h.lp == 0:
-                    continue
-                if h.element == HeroElement.FIRE:
-                    adv.append(h)
-                elif h.element == HeroElement.WATER:
-                    eq.append(h)
-                else:
-                    dis.append(h)
-        elif attacker.element == HeroElement.FIRE:
-            for h in defenders:
-                if h.lp == 0:
-                    continue
-                if h.element == HeroElement.FIRE:
-                    eq.append(h)
-                elif h.element == HeroElement.WATER:
-                    dis.append(h)
-                else:
-                    adv.append(h)
-        else:   # Hero is of type water
-            for h in defenders:
-                if h.lp == 0:
-                    continue
-                if h.element == HeroElement.FIRE:
-                    dis.append(h)
-                elif h.element == HeroElement.WATER:
-                    adv.append(h)
-                else:
-                    eq.append(h)
-
-        attacked = adv[math.floor(random.random() * len(adv))] if len(adv) > 0 else eq[math.floor(random.random() * len(eq))] if len(eq) > 0 else dis[math.floor(random.random() * len(dis))]
-
+        adv = []
+        eq = []
+        dis = []
+        attacked = choose_which_defender_to_attack(attacker,defenders,adv,eq,dis)
+        
         c = random.random() * 100 < attacker.crtr
         dmg = 0
         if c:
@@ -97,3 +66,34 @@ class ArenaDamageCalculator:
                 attacked.lp = 0
         print(defenders)
         return defenders
+
+def get_advantage_element(element: HeroElement) -> HeroElement:
+    if element == HeroElement.WATER:
+        return HeroElement.FIRE
+    elif element == HeroElement.FIRE:
+        return HeroElement.EARTH
+    elif element == HeroElement.EARTH:
+        return HeroElement.WATER
+
+
+def choose_which_defender_to_attack(attacker: Hero, defenders: list[Hero],advantage,equal,disadvantage) -> Hero:
+    
+
+
+    for hero in defenders:
+        if hero.life_points == 0:
+            continue
+        if hero.element == attacker.element:
+            equal.append(hero)
+        elif hero.element == get_advantage_element(attacker.element):
+            advantage.append(hero)
+        else:
+            disadvantage.append(hero)
+
+        
+    if len(advantage) > 0:
+        return advantage[math.floor(random.random() * len(advantage))]
+    elif len(equal) > 0:
+        return equal[math.floor(random.random() * len(equal))]
+    else:
+        return disadvantage[math.floor(random.random() * len(disadvantage))]
