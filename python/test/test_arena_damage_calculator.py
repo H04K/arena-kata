@@ -91,3 +91,26 @@ def test_compute_damage_with_attackers_adv_earth():
     assert defenders[2].lp == 100
     assert defenders[3].lp <= 100
     
+
+def test_compute_damage_crtr_with_rd_0_9(monkeypatch):
+    attackers = Hero(HeroElement.FIRE,100,100,100,50,100)
+    defenders = [Hero(HeroElement.WATER,100,100,100,100,100)]
+  
+    monkeypatch.setattr('random.random', lambda: 0.9)
+    defenders = ArenaDamageCalculator().computeDamage(attackers, defenders)
+    
+    assert defenders[0].lp == 22
+
+
+
+def test_compute_damage_with_buffs_with_random_0_9(monkeypatch):
+    attackers = Hero(HeroElement.FIRE,100,100,100,50,100)
+    defenders = [Hero(HeroElement.WATER,100,100,100,100,100)]
+    buff = Buff(1)
+    attackers.buffs.append(buff)
+  
+    monkeypatch.setattr('random.random', lambda: 0.9)
+    defenders = ArenaDamageCalculator().computeDamage(attackers, defenders)
+    
+    assert defenders[0].lp == 2
+   
