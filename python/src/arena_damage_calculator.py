@@ -31,25 +31,11 @@ class ArenaDamageCalculator:
         eq = []
         dis = []
         attacked = choose_which_defender_to_attack(attacker,defenders,adv,eq,dis)
-        
         c = random.random() * 100 < attacker.crtr
-        dmg = 0
-        if c:
-            dmg = (attacker.pow + (0.5 + attacker.leth / 5000) * attacker.pow) * (1-attacked.defense /7500)
-        else:
-            dmg = attacker.pow * (1-attacked.defense / 7500)
-
-        ## BUFFS
-        if Buff.ATTACK in attacker.buffs:
-            if c:
-                dmg += (attacker.pow * 0.25 + (0.5 + attacker.leth / 5000) * attacker.pow * 0.25) * (1-attacked.defense/7500)
-            else:
-                dmg += attacker.pow * 0.25* (1-attacked.defense/7500)
-
-        if Buff.DEFENSE in attacked.buffs:
-            dmg = dmg / (1-attacked.defense/7500) * (1-attacked.defense/7500 -0.25)
-
-        dmg = max(dmg, 0)
+        dmg = compute_damage_value(attacker,attacked,c)
+        dmg = apply_attack_buffs(attacker,attacked,dmg,c)
+        dmg = apply_defence_buffs(attacker,attacked,dmg)
+       
         if dmg > 0:
             if attacked in adv:
                 dmg = dmg + dmg * 20/100
@@ -68,6 +54,9 @@ class ArenaDamageCalculator:
         return defenders
 
 def get_advantage_element(element: HeroElement) -> HeroElement:
+    ''' 
+        Returns element on which attacker element has advantage 
+    '''
     if element == HeroElement.WATER:
         return HeroElement.FIRE
     elif element == HeroElement.FIRE:
@@ -78,8 +67,6 @@ def get_advantage_element(element: HeroElement) -> HeroElement:
 
 def choose_which_defender_to_attack(attacker: Hero, defenders: list[Hero],advantage,equal,disadvantage) -> Hero:
     
-
-
     for hero in defenders:
         if hero.life_points == 0:
             continue
@@ -97,3 +84,35 @@ def choose_which_defender_to_attack(attacker: Hero, defenders: list[Hero],advant
         return equal[math.floor(random.random() * len(equal))]
     else:
         return disadvantage[math.floor(random.random() * len(disadvantage))]
+
+
+def compute_damage_value(attacker: Hero, defender: Hero,c):
+        defense_ratio = (1-defender.defense / 7500)
+        power = attacker.pow
+        damage = 0
+        
+        if c:
+            damage = (power + (0.5 + attacker.leth / 5000) * power) * defense_ratio
+        else:
+            damage = power * defense_ratio
+
+        return damage
+
+def apply_attack_buffs(attacker: Hero, defender: Hero, damage,c):
+    defense_ratio = (1-defender.defense / 7500)
+    power = attacker.pow
+    if Buff.ATTACK in attacker.buffs:
+        if c:
+            damage += (power * 0.25 + (0.5 + attacker.leth / 5000) * power * 0.25) * defense_ratio
+        else:
+            damage += power * 0.25* defense_ratio
+
+    return damage
+
+
+def apply_defence_buffs(attacker : Hero,defender:Hero,damage):
+
+    if Buff.DEFENSE in defender.buffs:
+            damage = damage / (1-defender.defense/7500) * (1-defender.defense/7500 -0.25)
+
+    return max(damage, 0)
