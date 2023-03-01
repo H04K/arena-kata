@@ -2,6 +2,7 @@ from src.arena_damage_calculator import ArenaDamageCalculator, Hero, HeroElement
 import pytest
 
 
+
 def test_compute_damage_attacker_water_should_return_defenders_list():
     attacker = Hero(HeroElement.WATER,100,100,100,100,100)
     defenders = [   
@@ -49,7 +50,22 @@ def test_compute_damage_with_attackers_adv_fire():
     assert defenders[0].lp == 100
     assert defenders[1].lp == 100
     assert defenders[2].lp <100
+
+def test_compute_damage_with_attackers_equal():
+    buff_attacker = Buff(1)
+    buff_defenders_water = Buff(2)
+    buff_defenders_fire= Buff(2)
+    buff_defenders_earth = Buff(2)
+    attackers = Hero(HeroElement.FIRE,100,100,100,100,100)
+    defenders = [Hero(HeroElement.FIRE,100,100,100,100,100)]
     
+    defenders[0].buffs.append(buff_defenders_fire)
+    attackers.buffs.append(buff_attacker)
+    
+    defenders = ArenaDamageCalculator().computeDamage(attackers, defenders)
+    
+    assert defenders[0].lp == 0
+ 
 
 def test_compute_damage_with_attackers_adv_water():
     buff_attacker = Buff(1)
@@ -101,6 +117,15 @@ def test_compute_damage_crtr_with_rd_0_9(monkeypatch):
     
     assert defenders[0].lp == 22
 
+def test_compute_damage_crtr_with_rd_0_1(monkeypatch):
+    attackers = Hero(HeroElement.FIRE,100,100,100,50,100)
+    defenders = [Hero(HeroElement.WATER,100,100,100,100,100)]
+  
+    monkeypatch.setattr('random.random', lambda: 0.1)
+    defenders = ArenaDamageCalculator().computeDamage(attackers, defenders)
+    
+    assert defenders[0].lp == 0
+
 
 
 def test_compute_damage_with_buffs_with_random_0_9(monkeypatch):
@@ -114,3 +139,13 @@ def test_compute_damage_with_buffs_with_random_0_9(monkeypatch):
     
     assert defenders[0].lp == 2
    
+def test_compute_damage_with_buffs_with_random_0_1(monkeypatch):
+    attackers = Hero(HeroElement.FIRE,100,100,100,50,100)
+    defenders = [Hero(HeroElement.WATER,100,100,100,100,100)]
+    buff = Buff(1)
+    attackers.buffs.append(buff)
+  
+    monkeypatch.setattr('random.random', lambda: 0.1)
+    defenders = ArenaDamageCalculator().computeDamage(attackers, defenders)
+    
+    assert defenders[0].lp == 0

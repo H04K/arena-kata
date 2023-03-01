@@ -26,31 +26,14 @@ class Hero:
 class ArenaDamageCalculator:
 
     def computeDamage(self, attacker: Hero, defenders: list[Hero]):
-        power = attacker.pow
-        adv = []
-        eq = []
-        dis = []
+        adv,eq,dis = [],[],[]
         attacked = choose_which_defender_to_attack(attacker,defenders,adv,eq,dis)
-        c = random.random() * 100 < attacker.crtr
-        dmg = compute_damage_value(attacker,attacked,c)
-        dmg = apply_attack_buffs(attacker,attacked,dmg,c)
+        is_critical = random.random() * 100 < attacker.crtr
+        dmg = compute_damage_value(attacker,attacked,is_critical)
+        dmg = apply_attack_buffs(attacker,attacked,dmg,is_critical)
         dmg = apply_defence_buffs(attacker,attacked,dmg)
-       
-        if dmg > 0:
-            if attacked in adv:
-                dmg = dmg + dmg * 20/100
-            elif attacked in eq:
-                pass
-            else:
-                dmg = dmg - dmg *20/100
-
-        dmg = math.floor(dmg)
-
-        if dmg > 0:
-            attacked.lp = attacked.lp - dmg
-            if attacked.lp < 0:
-                attacked.lp = 0
-        print(defenders)
+        dmg = compute_bonus(dmg,attacked,adv,eq)
+        apply_full_damage_bonus_calculated(dmg,attacked)
         return defenders
 
 def get_advantage_element(element: HeroElement) -> HeroElement:
@@ -68,14 +51,13 @@ def get_advantage_element(element: HeroElement) -> HeroElement:
 def choose_which_defender_to_attack(attacker: Hero, defenders: list[Hero],advantage,equal,disadvantage) -> Hero:
     
     for hero in defenders:
-        if hero.life_points == 0:
-            continue
-        if hero.element == attacker.element:
-            equal.append(hero)
-        elif hero.element == get_advantage_element(attacker.element):
-            advantage.append(hero)
-        else:
-            disadvantage.append(hero)
+        if hero.life_points > 0:
+            if hero.element == attacker.element:
+                equal.append(hero)
+            elif hero.element == get_advantage_element(attacker.element):
+                advantage.append(hero)
+            else:
+                disadvantage.append(hero)
 
         
     if len(advantage) > 0:
@@ -86,23 +68,23 @@ def choose_which_defender_to_attack(attacker: Hero, defenders: list[Hero],advant
         return disadvantage[math.floor(random.random() * len(disadvantage))]
 
 
-def compute_damage_value(attacker: Hero, defender: Hero,c):
+def compute_damage_value(attacker: Hero, defender: Hero,is_critical):
         defense_ratio = (1-defender.defense / 7500)
         power = attacker.pow
         damage = 0
         
-        if c:
+        if is_critical:
             damage = (power + (0.5 + attacker.leth / 5000) * power) * defense_ratio
         else:
             damage = power * defense_ratio
 
         return damage
 
-def apply_attack_buffs(attacker: Hero, defender: Hero, damage,c):
+def apply_attack_buffs(attacker: Hero, defender: Hero, damage,is_critical):
     defense_ratio = (1-defender.defense / 7500)
     power = attacker.pow
     if Buff.ATTACK in attacker.buffs:
-        if c:
+        if is_critical:
             damage += (power * 0.25 + (0.5 + attacker.leth / 5000) * power * 0.25) * defense_ratio
         else:
             damage += power * 0.25* defense_ratio
@@ -116,3 +98,23 @@ def apply_defence_buffs(attacker : Hero,defender:Hero,damage):
             damage = damage / (1-defender.defense/7500) * (1-defender.defense/7500 -0.25)
 
     return max(damage, 0)
+
+
+def compute_bonus(damage,defender,advantage,equal):
+     
+    if damage > 0:
+        if defender in advantage:
+            damage = damage + damage * 0.2
+        elif defender in equal:
+            pass
+        else:
+            damage = damage - damage * 0.2
+
+    return math.floor(damage)
+
+
+def apply_full_damage_bonus_calculated(damage,defender):
+    if  damage > 0:
+            defender.lp -= damage
+            if defender.lp < 0:
+                defender.lp = 0
